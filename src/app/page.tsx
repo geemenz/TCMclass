@@ -17,6 +17,7 @@ interface Prompt {
   team: string;
   text: string;
   created_at: string;
+  marked?: boolean;
 }
 
 export default function Home() {
@@ -67,7 +68,13 @@ export default function Home() {
           filter: `team=eq.${selectedTeam}`,
         },
         (payload) => {
-          setPrompts((prev) => [...prev, payload.new as Prompt]);
+          const nextPrompt = payload.new as Prompt;
+          setPrompts((prev) => {
+            if (prev.some((prompt) => prompt.id === nextPrompt.id)) {
+              return prev;
+            }
+            return [...prev, nextPrompt];
+          });
         }
       )
       .on(
@@ -102,18 +109,26 @@ export default function Home() {
     if (!inputText.trim() || inputText.length > MAX_CHARS || !selectedTeam) return;
 
     setIsSubmitting(true);
-    const { error } = await supabase.from("prompts").insert([
-      {
-        team: selectedTeam,
-        text: inputText.trim(),
-      },
-    ]);
+    const text = inputText.trim();
+    const { data, error } = await supabase
+      .from("prompts")
+      .insert([
+        {
+          team: selectedTeam,
+          text,
+        },
+      ])
+      .select()
+      .single();
 
     setIsSubmitting(false);
 
     if (error) {
       toast.error("Error al enviar el prompt");
     } else {
+      if (data) {
+        setPrompts((prev) => [...prev, data as Prompt]);
+      }
       toast.success("Prompt enviado correctamente");
       setInputText("");
     }
@@ -197,7 +212,15 @@ export default function Home() {
               <div key={prompt.id} className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 shadow-sm flex flex-col">
                 <p className="text-zinc-300 whitespace-pre-wrap font-mono text-sm leading-relaxed">{prompt.text}</p>
                 <div className="mt-4 flex items-center justify-between text-xs text-zinc-500">
-                  <span>{new Date(prompt.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                  <div className="flex items-center gap-2">
+                    <span>{new Date(prompt.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                    {prompt.marked ? (
+                      <span className="inline-flex items-center gap-1 rounded-full border border-green-500/40 bg-green-950/40 px-2 py-0.5 text-[11px] font-medium text-green-400">
+                        <CheckCircle2 className="h-3 w-3" />
+                        Insertado
+                      </span>
+                    ) : null}
+                  </div>
                   <div className="flex gap-1">
                     <Button
                       variant="secondary"
