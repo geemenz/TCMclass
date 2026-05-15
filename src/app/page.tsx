@@ -18,7 +18,6 @@ import {
 import { toast } from "sonner";
 
 const TEAMS = ["TOM", "ANA", "DIANA"];
-const MAX_CHARS = 4000;
 
 interface Prompt {
   id: string;
@@ -172,7 +171,7 @@ export default function Home() {
   };
 
   const handleSubmit = async () => {
-    if (!inputText.trim() || inputText.length > MAX_CHARS || !selectedTeam) return;
+    if (!inputText.trim() || !selectedTeam) return;
 
     setIsSubmitting(true);
     const text = inputText.trim();
@@ -292,7 +291,7 @@ export default function Home() {
       </header>
 
       <section className="mx-auto flex w-full max-w-6xl min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-300/15 bg-slate-950/35">
-        <ScrollArea className="flex-1 px-4 py-4 md:px-7 md:py-6">
+        <ScrollArea className="min-h-0 flex-1 px-4 py-4 md:px-7 md:py-6">
           {prompts.length === 0 ? (
             <div className="flex h-[52vh] flex-col items-center justify-center rounded-2xl border border-dashed border-slate-500/35 bg-slate-900/20 text-slate-400">
               <BotMessageSquare className="mb-3 h-11 w-11 opacity-45" />
@@ -358,12 +357,8 @@ export default function Home() {
             <label htmlFor="prompt-input" className="text-sm font-semibold text-slate-300">
               Nuevo prompt
             </label>
-            <span
-              className={`text-xs font-medium ${
-                inputText.length > MAX_CHARS ? "text-rose-400" : "text-slate-400"
-              }`}
-            >
-              {inputText.length} / {MAX_CHARS}
+            <span className="text-xs font-medium text-slate-400">
+              {inputText.length} caracteres
             </span>
           </div>
           <div className="relative">
@@ -378,12 +373,12 @@ export default function Home() {
                 }
               }}
               placeholder="Escribe aqui tu prompt... (Ctrl + Enter para enviar)"
-              className="min-h-[130px] resize-y rounded-xl border-slate-500/35 bg-slate-900/50 p-4 pb-14 font-mono text-sm text-slate-100 placeholder:text-slate-500 focus:border-sky-400 focus:ring-sky-400/30"
+              className="h-[clamp(150px,28dvh,280px)] resize-none overflow-y-auto rounded-xl border-slate-500/35 bg-slate-900/50 p-4 pb-14 font-mono text-sm leading-relaxed text-slate-100 placeholder:text-slate-500 focus:border-sky-400 focus:ring-sky-400/30"
             />
             <div className="absolute bottom-3 right-3">
               <Button
                 onClick={handleSubmit}
-                disabled={!inputText.trim() || inputText.length > MAX_CHARS || isSubmitting}
+                disabled={!inputText.trim() || isSubmitting}
                 className="rounded-lg bg-sky-600 text-white shadow-lg shadow-blue-950/40 transition hover:bg-sky-500"
               >
                 {isSubmitting ? (

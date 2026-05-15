@@ -298,7 +298,7 @@ export default function AdminDashboard() {
                 </div>
               </header>
 
-              <ScrollArea className="h-[42vh] px-4 py-4 md:h-auto md:flex-1 md:px-5">
+              <ScrollArea className="h-[42vh] min-h-0 px-4 py-4 md:h-auto md:flex-1 md:px-5">
                 {teamPrompts.length === 0 ? (
                   <div className="flex h-44 flex-col items-center justify-center rounded-xl border border-dashed border-slate-500/35 bg-slate-900/20 text-slate-400">
                     <Inbox className="mb-2 h-8 w-8 opacity-45" />
