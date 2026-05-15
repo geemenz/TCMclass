@@ -1,12 +1,19 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Send, ArrowLeft, Loader2, BotMessageSquare, Copy, CheckCircle2 } from "lucide-react";
+import {
+  ArrowLeft,
+  BotMessageSquare,
+  CheckCircle2,
+  Copy,
+  Loader2,
+  Send,
+  ShieldCheck,
+} from "lucide-react";
 import { toast } from "sonner";
 
 const TEAMS = ["TOM", "ANA", "DIANA"];
@@ -27,31 +34,31 @@ export default function Home() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const endOfListRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    // We check the connection to supabase
     const checkConnection = async () => {
       try {
         const { error } = await supabase.from("prompts").select("id").limit(1);
-        if (!error) {
-          setIsConnected(true);
-        }
-      } catch (err) {
+        setIsConnected(!error);
+      } catch {
         setIsConnected(false);
       }
     };
-    checkConnection();
 
-    // Subscribe to realtime changes for the selected team
+    checkConnection();
+  }, []);
+
+  useEffect(() => {
     if (!selectedTeam) return;
 
     const fetchPrompts = async () => {
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from("prompts")
         .select("*")
         .eq("team", selectedTeam)
         .order("created_at", { ascending: true });
-      
+
       if (data) setPrompts(data);
     };
 
@@ -70,9 +77,7 @@ export default function Home() {
         (payload) => {
           const nextPrompt = payload.new as Prompt;
           setPrompts((prev) => {
-            if (prev.some((prompt) => prompt.id === nextPrompt.id)) {
-              return prev;
-            }
+            if (prev.some((prompt) => prompt.id === nextPrompt.id)) return prev;
             return [...prev, nextPrompt];
           });
         }
@@ -87,7 +92,9 @@ export default function Home() {
         },
         (payload) => {
           setPrompts((prev) =>
-            prev.map((p) => (p.id === payload.new.id ? { ...p, ...payload.new } : p))
+            prev.map((prompt) =>
+              prompt.id === payload.new.id ? { ...prompt, ...payload.new } : prompt
+            )
           );
         }
       )
@@ -98,11 +105,25 @@ export default function Home() {
     };
   }, [selectedTeam]);
 
-  const handleCopy = (prompt: Prompt) => {
-    navigator.clipboard.writeText(prompt.text);
-    setCopiedId(prompt.id);
-    toast.success("Prompt copiado al portapapeles");
-    setTimeout(() => setCopiedId(null), 2000);
+  useEffect(() => {
+    if (!selectedTeam || prompts.length === 0) return;
+    endOfListRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+  }, [prompts, selectedTeam]);
+
+  const insertedCount = useMemo(
+    () => prompts.filter((prompt) => prompt.marked).length,
+    [prompts]
+  );
+
+  const handleCopy = async (prompt: Prompt) => {
+    try {
+      await navigator.clipboard.writeText(prompt.text);
+      setCopiedId(prompt.id);
+      toast.success("Prompt copiado al portapapeles");
+      setTimeout(() => setCopiedId(null), 2000);
+    } catch {
+      toast.error("No se pudo copiar el prompt");
+    }
   };
 
   const handleSubmit = async () => {
@@ -110,6 +131,7 @@ export default function Home() {
 
     setIsSubmitting(true);
     const text = inputText.trim();
+
     const { data, error } = await supabase
       .from("prompts")
       .insert([
@@ -125,152 +147,186 @@ export default function Home() {
 
     if (error) {
       toast.error("Error al enviar el prompt");
-    } else {
-      if (data) {
-        setPrompts((prev) => [...prev, data as Prompt]);
-      }
-      toast.success("Prompt enviado correctamente");
-      setInputText("");
+      return;
     }
+
+    if (data) {
+      setPrompts((prev) => [...prev, data as Prompt]);
+    }
+
+    toast.success("Prompt enviado correctamente");
+    setInputText("");
   };
 
   if (!selectedTeam) {
     return (
-      <main className="flex-1 flex flex-col items-center justify-center p-6 bg-zinc-950">
-        <div className="w-full max-w-4xl text-center space-y-8">
-          <div className="space-y-4">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-900 border border-zinc-800 text-sm">
-              <div className={`w-2 h-2 rounded-full ${isConnected ? "bg-green-500" : "bg-red-500 animate-pulse"}`} />
-              {isConnected ? "Sistema en línea" : "Conectando..."}
+      <main className="app-canvas min-h-screen px-6 py-10 text-slate-100 md:px-10">
+        <section className="mx-auto flex w-full max-w-6xl flex-col gap-10">
+          <header className="soft-panel animate-rise rounded-3xl px-6 py-8 md:px-10 md:py-10">
+            <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-slate-400/20 bg-slate-900/30 px-3 py-1 text-sm font-medium text-slate-200">
+              <span
+                className={`h-2 w-2 rounded-full ${isConnected ? "bg-emerald-400" : "bg-amber-400 animate-pulse"}`}
+              />
+              {isConnected ? "Conectado a Supabase" : "Verificando conexion"}
             </div>
-            <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-white">
-              Agentic Engineering <span className="text-blue-500">Prompt Hub</span>
+            <h1 className="text-balance text-4xl font-semibold tracking-tight text-white md:text-5xl">
+              Agentic Engineering Prompt Hub
             </h1>
-            <p className="text-zinc-400 text-lg max-w-2xl mx-auto">
-              Selecciona tu equipo para acceder al espacio de trabajo. Todos los prompts serán enviados en tiempo real al panel del instructor.
+            <p className="mt-4 max-w-3xl text-pretty text-base text-slate-300 md:text-lg">
+              Espacio unificado para enviar prompts de cada equipo en tiempo real, con trazabilidad y confirmacion de insercion desde el panel docente.
             </p>
-          </div>
+          </header>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-8">
-            {TEAMS.map((team) => (
-              <Card 
-                key={team} 
-                className="group cursor-pointer hover:border-blue-500/50 hover:bg-zinc-900/50 transition-all duration-300 bg-zinc-900 border-zinc-800"
+          <section className="grid gap-5 md:grid-cols-3">
+            {TEAMS.map((team, index) => (
+              <button
+                key={team}
+                type="button"
                 onClick={() => setSelectedTeam(team)}
+                className="soft-panel animate-rise group rounded-2xl border p-6 text-left transition duration-300 hover:-translate-y-0.5 hover:border-sky-300/60 hover:shadow-[0_24px_50px_-28px_rgba(30,64,175,0.8)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+                style={{ animationDelay: `${index * 60}ms` }}
               >
-                <CardContent className="p-8 flex flex-col items-center gap-4">
-                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-2xl shadow-lg group-hover:scale-110 transition-transform duration-300">
-                    {team.charAt(0)}
-                  </div>
-                  <h2 className="text-xl font-semibold text-zinc-100">Equipo {team}</h2>
-                </CardContent>
-              </Card>
+                <div className="mb-6 flex items-center justify-end">
+                  <span className="rounded-full border border-slate-500/40 bg-slate-800/40 px-2.5 py-1 text-xs font-medium uppercase tracking-wide text-slate-300">
+                    Equipo
+                  </span>
+                </div>
+                <h2 className="text-xl font-semibold text-white">{team}</h2>
+                <p className="mt-2 text-sm text-slate-300">
+                  Envia prompts y observa el estado de procesamiento en directo.
+                </p>
+              </button>
             ))}
-          </div>
-        </div>
+          </section>
+        </section>
       </main>
     );
-}
-  
+  }
 
   return (
-    <main className="flex-1 flex flex-col h-screen bg-zinc-950">
-      <header className="border-b border-zinc-800 bg-zinc-950/50 backdrop-blur-xl sticky top-0 z-10 px-6 py-4 flex items-center justify-between">
+    <main className="app-canvas flex min-h-screen flex-col px-4 pb-4 pt-5 text-slate-100 md:px-8 md:pb-6 md:pt-6">
+      <header className="soft-panel animate-rise mx-auto mb-4 flex w-full max-w-6xl items-center justify-between rounded-2xl px-4 py-3 md:px-6">
         <div className="flex items-center gap-4">
-          <Button 
-            variant="ghost" 
+          <Button
+            variant="ghost"
             size="icon"
             onClick={() => setSelectedTeam(null)}
-            className="text-zinc-400 hover:text-white"
+            className="h-9 w-9 rounded-xl border border-transparent text-slate-300 hover:border-slate-400/20 hover:bg-slate-700/20 hover:text-white"
           >
-            <ArrowLeft className="w-5 h-5" />
+            <ArrowLeft className="h-4 w-4" />
           </Button>
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold shadow-lg">
-              {selectedTeam.charAt(0)}
-            </div>
-            <div>
-              <h2 className="font-semibold text-white">Equipo {selectedTeam}</h2>
-              <div className="flex items-center gap-2 text-xs text-zinc-400">
-                <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
-                Conectado
-              </div>
-            </div>
+          <div>
+            <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-400">Canal activo</p>
+            <h2 className="text-lg font-semibold text-white md:text-xl">Equipo {selectedTeam}</h2>
           </div>
+        </div>
+        <div className="flex items-center gap-2 rounded-full border border-emerald-400/35 bg-emerald-900/20 px-3 py-1 text-xs font-medium text-emerald-300">
+          <ShieldCheck className="h-3.5 w-3.5" />
+          {insertedCount} insertados
         </div>
       </header>
 
-      <ScrollArea className="flex-1 p-6">
-        <div className="max-w-4xl mx-auto space-y-6">
+      <section className="mx-auto flex w-full max-w-6xl flex-1 flex-col overflow-hidden rounded-2xl border border-slate-300/15 bg-slate-950/35">
+        <ScrollArea className="flex-1 px-4 py-4 md:px-7 md:py-6">
           {prompts.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-[40vh] text-zinc-500 space-y-4">
-              <BotMessageSquare className="w-12 h-12 opacity-20" />
-              <p>Aún no hay prompts en este equipo. ¡Envía el primero!</p>
+            <div className="flex h-[52vh] flex-col items-center justify-center rounded-2xl border border-dashed border-slate-500/35 bg-slate-900/20 text-slate-400">
+              <BotMessageSquare className="mb-3 h-11 w-11 opacity-45" />
+              <p className="text-sm md:text-base">Todavia no hay prompts en este equipo.</p>
             </div>
           ) : (
-            prompts.map((prompt) => (
-              <div key={prompt.id} className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 shadow-sm flex flex-col">
-                <p className="text-zinc-300 whitespace-pre-wrap font-mono text-sm leading-relaxed">{prompt.text}</p>
-                <div className="mt-4 flex items-center justify-between text-xs text-zinc-500">
-                  <div className="flex items-center gap-2">
-                    <span>{new Date(prompt.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                    {prompt.marked ? (
-                      <span className="inline-flex items-center gap-1 rounded-full border border-green-500/40 bg-green-950/40 px-2 py-0.5 text-[11px] font-medium text-green-400">
-                        <CheckCircle2 className="h-3 w-3" />
-                        Insertado
+            <div className="space-y-4 pb-2">
+              {prompts.map((prompt) => (
+                <article
+                  key={prompt.id}
+                  className={`animate-rise rounded-2xl border px-4 py-4 shadow-sm md:px-5 ${
+                    prompt.marked
+                      ? "border-emerald-400/45 bg-emerald-950/20"
+                      : "border-slate-500/30 bg-slate-900/35"
+                  }`}
+                >
+                  <p className="whitespace-pre-wrap break-words font-mono text-sm leading-relaxed text-slate-200 md:text-[0.92rem]">
+                    {prompt.text}
+                  </p>
+                  <footer className="mt-4 flex items-center justify-between gap-3 text-xs text-slate-400">
+                    <div className="flex items-center gap-2">
+                      <span>
+                        {new Date(prompt.created_at).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
                       </span>
-                    ) : null}
-                  </div>
-                  <div className="flex gap-1">
+                      {prompt.marked ? (
+                        <span className="inline-flex items-center gap-1 rounded-full border border-emerald-400/45 bg-emerald-950/40 px-2 py-0.5 text-[11px] font-semibold text-emerald-300">
+                          <CheckCircle2 className="h-3 w-3" />
+                          Insertado
+                        </span>
+                      ) : null}
+                    </div>
                     <Button
                       variant="secondary"
                       size="sm"
-                      className="h-7 px-2 text-xs bg-zinc-800 hover:bg-zinc-700 text-zinc-300"
+                      className="h-7 rounded-lg border border-slate-400/20 bg-slate-800/60 px-2.5 text-xs text-slate-200 hover:bg-slate-700/80"
                       onClick={() => handleCopy(prompt)}
                     >
                       {copiedId === prompt.id ? (
-                        <CheckCircle2 className="w-3.5 h-3.5 text-green-500 mr-1.5" />
+                        <CheckCircle2 className="mr-1.5 h-3.5 w-3.5 text-emerald-400" />
                       ) : (
-                        <Copy className="w-3.5 h-3.5 mr-1.5" />
+                        <Copy className="mr-1.5 h-3.5 w-3.5" />
                       )}
                       {copiedId === prompt.id ? "Copiado" : "Copiar"}
                     </Button>
-                  </div>
-                </div>
-              </div>
-            ))
+                  </footer>
+                </article>
+              ))}
+              <div ref={endOfListRef} />
+            </div>
           )}
-        </div>
-      </ScrollArea>
+        </ScrollArea>
 
-      <div className="p-6 bg-zinc-950 border-t border-zinc-800">
-        <div className="max-w-4xl mx-auto space-y-3">
-          <div className="flex items-center justify-between px-1">
-            <label className="text-sm font-medium text-zinc-400">Nuevo Prompt</label>
-            <span className={`text-xs ${inputText.length > MAX_CHARS ? 'text-red-500 font-bold' : 'text-zinc-500'}`}>
+        <div className="soft-panel border-x-0 border-b-0 rounded-none px-4 py-4 md:px-7 md:py-5">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <label htmlFor="prompt-input" className="text-sm font-semibold text-slate-300">
+              Nuevo prompt
+            </label>
+            <span
+              className={`text-xs font-medium ${
+                inputText.length > MAX_CHARS ? "text-rose-400" : "text-slate-400"
+              }`}
+            >
               {inputText.length} / {MAX_CHARS}
             </span>
           </div>
           <div className="relative">
             <Textarea
+              id="prompt-input"
               value={inputText}
-              onChange={(e) => setInputText(e.target.value)}
-              placeholder="Escribe aquí tu prompt..."
-              className="min-h-[120px] resize-y bg-zinc-900 border-zinc-800 focus:border-blue-500 focus:ring-blue-500/20 text-zinc-100 placeholder:text-zinc-600 rounded-xl font-mono text-sm p-4 pb-14"
+              onChange={(event) => setInputText(event.target.value)}
+              onKeyDown={(event) => {
+                if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
+                  event.preventDefault();
+                  void handleSubmit();
+                }
+              }}
+              placeholder="Escribe aqui tu prompt... (Ctrl + Enter para enviar)"
+              className="min-h-[130px] resize-y rounded-xl border-slate-500/35 bg-slate-900/50 p-4 pb-14 font-mono text-sm text-slate-100 placeholder:text-slate-500 focus:border-sky-400 focus:ring-sky-400/30"
             />
             <div className="absolute bottom-3 right-3">
-              <Button 
-                onClick={handleSubmit} 
+              <Button
+                onClick={handleSubmit}
                 disabled={!inputText.trim() || inputText.length > MAX_CHARS || isSubmitting}
-                className="rounded-lg bg-blue-600 hover:bg-blue-700 text-white shadow-lg transition-all"
+                className="rounded-lg bg-sky-600 text-white shadow-lg shadow-blue-950/40 transition hover:bg-sky-500"
               >
-                {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4 mr-2" />}
+                {isSubmitting ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Send className="mr-2 h-4 w-4" />
+                )}
                 Enviar
               </Button>
             </div>
           </div>
         </div>
-      </div>
+      </section>
     </main>
   );
 }
