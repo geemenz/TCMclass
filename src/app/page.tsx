@@ -170,7 +170,7 @@ export default function Home() {
     try {
       await navigator.clipboard.writeText(prompt.text);
       setCopiedId(prompt.id);
-      toast.success("Prompt copiado al portapapeles");
+      toast.success("Prompt copied to clipboard");
       setTimeout(() => setCopiedId(null), 2000);
     } catch {
       toast.error("No se pudo copiar el prompt");
@@ -197,7 +197,7 @@ export default function Home() {
     setIsSubmitting(false);
 
     if (error) {
-      toast.error("Error al enviar el prompt");
+      toast.error("Error sending prompt");
       return;
     }
 
@@ -205,7 +205,7 @@ export default function Home() {
       setPrompts((prev) => [...prev, data as Prompt]);
     }
 
-    toast.success("Prompt enviado correctamente");
+    toast.success("Prompt sent successfully");
     setInputText("");
   };
 
@@ -223,7 +223,7 @@ export default function Home() {
               <span
                 className={`h-2 w-2 rounded-full ${isConnected ? "bg-emerald-400" : "bg-amber-400 animate-pulse"}`}
               />
-              {isConnected ? "Conectado" : "Verificando conexion"}
+              {isConnected ? "Connected" : "Checking connection"}
             </div>
             <motion.h1
               initial={{ opacity: 0, y: 18 }}
@@ -242,7 +242,7 @@ export default function Home() {
               </motion.span>
             </motion.h1>
             <p className="mt-3 max-w-3xl text-pretty text-sm text-slate-300 md:mt-4 md:text-lg">
-              Espacio unificado para enviar prompts de cada equipo en tiempo real, con trazabilidad y confirmacion de insercion desde el panel docente.
+              A shared workspace for each team to submit prompts in real time, with insertion tracking from the instructor panel.
             </p>
           </motion.header>
 
@@ -267,11 +267,11 @@ export default function Home() {
                 <div>
                   <h2 className="text-3xl font-semibold text-white md:text-4xl">{team}</h2>
                   <p className="mt-2 max-w-[24ch] text-xs text-slate-300 md:text-sm">
-                    Envia prompts y observa el estado de procesamiento en directo.
+                    Send prompts and track processing status in real time.
                   </p>
                 </div>
                 <div className="mt-4 inline-flex w-fit items-center rounded-md border border-sky-400/30 bg-sky-950/25 px-2.5 py-1 text-xs font-medium text-sky-200 transition group-hover:border-sky-300/70 group-hover:text-sky-100">
-                  Entrar al canal
+                  Enter channel
                 </div>
               </motion.button>
             ))}
@@ -299,8 +299,8 @@ export default function Home() {
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div>
-            <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-400">Canal activo</p>
-            <h2 className="text-xl font-semibold text-white md:text-2xl">Equipo {selectedTeam}</h2>
+            <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-400">Active channel</p>
+            <h2 className="text-xl font-semibold text-white md:text-2xl">Team {selectedTeam}</h2>
           </div>
         </div>
         <div className="flex flex-wrap items-center justify-end gap-2">
@@ -316,13 +316,13 @@ export default function Home() {
                 className="inline-flex items-center gap-1.5 rounded-full border border-sky-400/35 bg-sky-900/25 px-3 py-1 text-xs font-medium text-sky-200 hover:bg-sky-800/35"
               >
                 <ExternalLink className="h-3.5 w-3.5" />
-                Abrir enlace
+                Open link
               </a>
             </div>
           ) : null}
           <div className="flex items-center gap-2 rounded-full border border-emerald-400/35 bg-emerald-900/20 px-3 py-1 text-xs font-medium text-emerald-300">
             <ShieldCheck className="h-3.5 w-3.5" />
-            {insertedCount} insertados
+            {insertedCount} inserted
           </div>
         </div>
       </motion.header>
@@ -332,7 +332,7 @@ export default function Home() {
           {prompts.length === 0 ? (
             <div className="flex h-[52vh] flex-col items-center justify-center rounded-2xl border border-dashed border-slate-500/35 bg-slate-900/20 text-slate-400">
               <BotMessageSquare className="mb-3 h-11 w-11 opacity-45" />
-              <p className="text-sm md:text-base">Todavia no hay prompts en este equipo.</p>
+              <p className="text-sm md:text-base">There are no prompts in this team yet.</p>
             </div>
           ) : (
             <div className="space-y-4 pb-2">
@@ -367,7 +367,7 @@ export default function Home() {
                       {prompt.marked ? (
                         <span className="inline-flex items-center gap-1 rounded-full border border-emerald-400/45 bg-emerald-950/40 px-2 py-0.5 text-[11px] font-semibold text-emerald-300">
                           <CheckCircle2 className="h-3 w-3" />
-                          Insertado
+                          Inserted
                         </span>
                       ) : null}
                     </div>
@@ -382,7 +382,7 @@ export default function Home() {
                       ) : (
                         <Copy className="mr-1.5 h-3.5 w-3.5" />
                       )}
-                      {copiedId === prompt.id ? "Copiado" : "Copiar"}
+                      {copiedId === prompt.id ? "Copied" : "Copy"}
                     </Button>
                   </footer>
                 </motion.article>
@@ -395,10 +395,10 @@ export default function Home() {
         <div className="soft-panel border-x-0 border-b-0 rounded-none px-4 py-4 md:px-7 md:py-5">
           <div className="mb-3 flex items-center justify-between gap-3">
             <label htmlFor="prompt-input" className="text-sm font-semibold text-slate-300">
-              Nuevo prompt
+              New prompt
             </label>
             <span className="text-xs font-medium text-slate-400">
-              {inputText.length} caracteres
+              {inputText.length} characters
             </span>
           </div>
           <div className="relative">
@@ -412,7 +412,7 @@ export default function Home() {
                   void handleSubmit();
                 }
               }}
-              placeholder="Escribe aqui tu prompt... (Ctrl + Enter para enviar)"
+              placeholder="Write your prompt here... (Ctrl + Enter to send)"
               className="h-[clamp(150px,28dvh,280px)] resize-none overflow-y-auto rounded-xl border-slate-500/35 bg-slate-900/50 p-4 pb-14 font-mono text-sm leading-relaxed text-slate-100 placeholder:text-slate-500 focus:border-sky-400 focus:ring-sky-400/30"
             />
             <div className="absolute bottom-3 right-3">
@@ -426,7 +426,7 @@ export default function Home() {
                 ) : (
                   <Send className="mr-2 h-4 w-4" />
                 )}
-                Enviar
+                Send
               </Button>
             </div>
           </div>

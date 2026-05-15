@@ -137,7 +137,7 @@ export default function AdminDashboard() {
       try {
         new URL(normalizedUrl);
       } catch {
-        toast.error("El enlace no es valido");
+        toast.error("The link is not valid");
         return;
       }
     }
@@ -155,7 +155,7 @@ export default function AdminDashboard() {
     setIsSavingLink((prev) => ({ ...prev, [team]: false }));
 
     if (error) {
-      toast.error("No se pudo guardar el enlace");
+      toast.error("Could not save the link");
       return;
     }
 
@@ -184,12 +184,12 @@ export default function AdminDashboard() {
     setIsSendingAdmin((prev) => ({ ...prev, [team]: false }));
 
     if (error) {
-      toast.error("No se pudo enviar el mensaje al equipo");
+      toast.error("Could not send the message to the team");
       return;
     }
 
     setAdminDrafts((prev) => ({ ...prev, [team]: "" }));
-    toast.success(`Mensaje enviado a ${team}`);
+    toast.success(`Message sent to ${team}`);
   };
 
   const totalInserted = useMemo(
@@ -201,10 +201,10 @@ export default function AdminDashboard() {
     try {
       await navigator.clipboard.writeText(prompt.text);
       setCopiedId(prompt.id);
-      toast.success("Prompt copiado al portapapeles");
+      toast.success("Prompt copied to clipboard");
       setTimeout(() => setCopiedId(null), 2000);
     } catch {
-      toast.error("Error al copiar");
+      toast.error("Error copying prompt");
     }
   };
 
@@ -212,12 +212,12 @@ export default function AdminDashboard() {
     const { error } = await supabase.from("prompts").delete().eq("id", id);
 
     if (error) {
-      toast.error("Error al borrar el prompt");
+      toast.error("Error deleting prompt");
       return;
     }
 
     setPrompts((prev) => prev.filter((prompt) => prompt.id !== id));
-    toast.success("Prompt borrado");
+    toast.success("Prompt deleted");
   };
 
   const handleToggleMark = async (prompt: Prompt) => {
@@ -228,7 +228,7 @@ export default function AdminDashboard() {
       .eq("id", prompt.id);
 
     if (error) {
-      toast.error("Error al marcar el prompt");
+      toast.error("Error updating prompt status");
       return;
     }
 
@@ -237,7 +237,7 @@ export default function AdminDashboard() {
         currentPrompt.id === prompt.id ? { ...currentPrompt, marked: nextMarked } : currentPrompt
       )
     );
-    toast.success(nextMarked ? "Prompt marcado como insertado" : "Prompt desmarcado");
+    toast.success(nextMarked ? "Prompt marked as inserted" : "Prompt unmarked");
   };
 
   const getTeamPrompts = (team: string) => prompts.filter((prompt) => prompt.team === team);
@@ -258,15 +258,15 @@ export default function AdminDashboard() {
         <div>
           <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight text-white">
             <MessageSquare className="h-6 w-6 text-sky-300" />
-            Panel de administracion
+            Admin panel
           </h1>
           <p className="mt-1 text-sm text-slate-300">
-            Gestion de prompts en tiempo real para los tres equipos.
+            Real-time prompt management for all three teams.
           </p>
         </div>
         <div className="flex items-center gap-2 rounded-full border border-emerald-400/40 bg-emerald-900/20 px-3 py-1.5 text-sm font-medium text-emerald-300">
           <ShieldCheck className="h-4 w-4" />
-          {totalInserted} insertados de {prompts.length}
+          {totalInserted} inserted out of {prompts.length}
         </div>
       </motion.header>
 
@@ -286,7 +286,7 @@ export default function AdminDashboard() {
               <header className="flex items-center justify-between border-b border-slate-400/15 px-4 py-3 md:px-5">
                 <div className="min-w-0 flex-1">
                   <div className="mb-2 flex items-center justify-between gap-2">
-                    <h2 className="truncate text-xl font-semibold text-white">Equipo {team}</h2>
+                    <h2 className="truncate text-xl font-semibold text-white">Team {team}</h2>
                     <span className="rounded-md border border-slate-400/25 bg-slate-800/45 px-2 py-1 text-xs font-medium text-slate-300">
                       {teamPrompts.length}
                     </span>
@@ -296,7 +296,7 @@ export default function AdminDashboard() {
                       type="url"
                       value={teamLinks[team] ?? ""}
                       onChange={(event) => handleLinkInputChange(team, event.target.value)}
-                      placeholder="https://enlace-del-equipo"
+                      placeholder="https://team-link"
                       className="h-8 w-full rounded-md border border-slate-400/25 bg-slate-900/70 px-2.5 text-xs text-slate-200 placeholder:text-slate-500 focus:border-sky-400 focus:outline-none"
                     />
                     <Button
@@ -306,7 +306,7 @@ export default function AdminDashboard() {
                       disabled={isSavingLink[team]}
                       className="h-8 rounded-md border border-slate-400/25 bg-slate-800/60 px-2.5 text-xs text-slate-100 hover:bg-slate-700/70"
                     >
-                      {isSavingLink[team] ? "..." : "Guardar"}
+                      {isSavingLink[team] ? "..." : "Save"}
                     </Button>
                   </div>
                 </div>
@@ -316,7 +316,7 @@ export default function AdminDashboard() {
                 {teamPrompts.length === 0 ? (
                   <div className="flex h-44 flex-col items-center justify-center rounded-xl border border-dashed border-slate-500/35 bg-slate-900/20 text-slate-400">
                     <Inbox className="mb-2 h-8 w-8 opacity-45" />
-                    <p className="text-sm">Sin prompts todavia</p>
+                    <p className="text-sm">No prompts yet</p>
                   </div>
                 ) : (
                   <div className="space-y-3 pb-1">
@@ -340,7 +340,7 @@ export default function AdminDashboard() {
                             {prompt.marked ? (
                               <span className="inline-flex items-center gap-1 rounded-full border border-emerald-400/45 bg-emerald-950/40 px-2 py-0.5 text-[11px] font-semibold text-emerald-300">
                                 <CheckCircle2 className="h-3 w-3" />
-                                Insertado
+                                Inserted
                               </span>
                             ) : null}
                           </div>
@@ -367,7 +367,7 @@ export default function AdminDashboard() {
                               onClick={() => handleToggleMark(prompt)}
                             >
                               <Check className="mr-1.5 h-3.5 w-3.5" />
-                              {prompt.marked ? "Insertado" : "Insertar"}
+                              {prompt.marked ? "Inserted" : "Insert"}
                             </Button>
 
                             <Button
@@ -381,7 +381,7 @@ export default function AdminDashboard() {
                               ) : (
                                 <Copy className="mr-1.5 h-3.5 w-3.5" />
                               )}
-                              {copiedId === prompt.id ? "Copiado" : "Copiar"}
+                              {copiedId === prompt.id ? "Copied" : "Copy"}
                             </Button>
 
                             <Button
@@ -402,12 +402,12 @@ export default function AdminDashboard() {
 
               <div className="border-t border-slate-400/15 px-4 py-3 md:px-5">
                 <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-400">
-                  Mensaje del admin
+                  Admin message
                 </label>
                 <Textarea
                   value={adminDrafts[team] ?? ""}
                   onChange={(event) => handleAdminDraftChange(team, event.target.value)}
-                  placeholder="Escribe un mensaje para este equipo..."
+                  placeholder="Write a message for this team..."
                   className="min-h-[88px] resize-none rounded-lg border-slate-500/35 bg-slate-900/60 text-sm text-slate-100 placeholder:text-slate-500 focus:border-sky-400 focus:ring-sky-400/30"
                 />
                 <div className="mt-2 flex justify-end">
@@ -417,7 +417,7 @@ export default function AdminDashboard() {
                     disabled={isSendingAdmin[team] || !(adminDrafts[team] ?? "").trim()}
                     className="h-8 rounded-md bg-sky-600 px-3 text-xs text-white hover:bg-sky-500"
                   >
-                    {isSendingAdmin[team] ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Enviar al equipo"}
+                    {isSendingAdmin[team] ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Send to team"}
                   </Button>
                 </div>
               </div>
