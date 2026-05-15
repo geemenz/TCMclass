@@ -10,6 +10,7 @@ import {
   BotMessageSquare,
   CheckCircle2,
   Copy,
+  ExternalLink,
   Loader2,
   Send,
   ShieldCheck,
@@ -25,6 +26,12 @@ interface Prompt {
   text: string;
   created_at: string;
   marked?: boolean;
+  from_admin?: boolean;
+}
+
+interface TeamLink {
+  team: string;
+  url: string;
 }
 
 export default function Home() {
@@ -34,6 +41,7 @@ export default function Home() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [teamLink, setTeamLink] = useState<string>("");
   const endOfListRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -51,6 +59,19 @@ export default function Home() {
 
   useEffect(() => {
     if (!selectedTeam) return;
+
+    const fetchTeamLink = async () => {
+      const { data } = await supabase
+        .from("team_links")
+        .select("team,url")
+        .eq("team", selectedTeam)
+        .maybeSingle();
+
+      const linkData = data as TeamLink | null;
+      setTeamLink(linkData?.url ?? "");
+    };
+
+    fetchTeamLink();
 
     const fetchPrompts = async () => {
       const { data } = await supabase
@@ -96,6 +117,30 @@ export default function Home() {
               prompt.id === payload.new.id ? { ...prompt, ...payload.new } : prompt
             )
           );
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "team_links",
+          filter: `team=eq.${selectedTeam}`,
+        },
+        (payload) => {
+          setTeamLink((payload.new as TeamLink).url ?? "");
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "team_links",
+          filter: `team=eq.${selectedTeam}`,
+        },
+        (payload) => {
+          setTeamLink((payload.new as TeamLink).url ?? "");
         }
       )
       .subscribe();
@@ -222,9 +267,27 @@ export default function Home() {
             <h2 className="text-lg font-semibold text-white md:text-xl">Equipo {selectedTeam}</h2>
           </div>
         </div>
-        <div className="flex items-center gap-2 rounded-full border border-emerald-400/35 bg-emerald-900/20 px-3 py-1 text-xs font-medium text-emerald-300">
-          <ShieldCheck className="h-3.5 w-3.5" />
-          {insertedCount} insertados
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          {teamLink ? (
+            <div className="flex max-w-full flex-wrap items-center justify-end gap-2">
+              <span className="max-w-[min(80vw,520px)] break-all rounded-full border border-slate-400/25 bg-slate-900/45 px-3 py-1 text-xs font-medium text-slate-200">
+                {teamLink}
+              </span>
+              <a
+                href={teamLink}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1.5 rounded-full border border-sky-400/35 bg-sky-900/25 px-3 py-1 text-xs font-medium text-sky-200 hover:bg-sky-800/35"
+              >
+                <ExternalLink className="h-3.5 w-3.5" />
+                Abrir enlace
+              </a>
+            </div>
+          ) : null}
+          <div className="flex items-center gap-2 rounded-full border border-emerald-400/35 bg-emerald-900/20 px-3 py-1 text-xs font-medium text-emerald-300">
+            <ShieldCheck className="h-3.5 w-3.5" />
+            {insertedCount} insertados
+          </div>
         </div>
       </header>
 
@@ -251,6 +314,11 @@ export default function Home() {
                   </p>
                   <footer className="mt-4 flex items-center justify-between gap-3 text-xs text-slate-400">
                     <div className="flex items-center gap-2">
+                      {prompt.from_admin ? (
+                        <span className="inline-flex items-center rounded-full border border-sky-400/45 bg-sky-950/35 px-2 py-0.5 text-[11px] font-semibold text-sky-300">
+                          Admin
+                        </span>
+                      ) : null}
                       <span>
                         {new Date(prompt.created_at).toLocaleTimeString([], {
                           hour: "2-digit",
