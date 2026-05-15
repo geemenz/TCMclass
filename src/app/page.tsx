@@ -15,6 +15,7 @@ import {
   Send,
   ShieldCheck,
 } from "lucide-react";
+import { motion } from "framer-motion";
 import { toast } from "sonner";
 
 const TEAMS = ["TOM", "ANA", "DIANA"];
@@ -42,6 +43,12 @@ export default function Home() {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [teamLink, setTeamLink] = useState<string>("");
   const endOfListRef = useRef<HTMLDivElement | null>(null);
+
+  const fadeInUp = {
+    initial: { opacity: 0, y: 20 },
+    animate: { opacity: 1, y: 0 },
+    transition: { duration: 0.45, ease: "easeOut" as const },
+  };
 
   useEffect(() => {
     const checkConnection = async () => {
@@ -204,54 +211,84 @@ export default function Home() {
 
   if (!selectedTeam) {
     return (
-      <main className="app-canvas h-dvh overflow-hidden px-4 py-4 text-slate-100 md:px-10 md:py-8">
+      <motion.main
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.35 }}
+        className="app-canvas h-dvh overflow-hidden px-4 py-4 text-slate-100 md:px-10 md:py-8"
+      >
         <section className="mx-auto flex h-full w-full max-w-6xl flex-col gap-4 md:gap-8">
-          <header className="soft-panel animate-rise rounded-3xl px-5 py-5 md:px-10 md:py-8">
+          <motion.header {...fadeInUp} className="soft-panel rounded-3xl px-5 py-5 md:px-10 md:py-8">
             <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-slate-400/20 bg-slate-900/30 px-3 py-1 text-xs font-medium text-slate-200 md:text-sm">
               <span
                 className={`h-2 w-2 rounded-full ${isConnected ? "bg-emerald-400" : "bg-amber-400 animate-pulse"}`}
               />
               {isConnected ? "Conectado" : "Verificando conexion"}
             </div>
-            <h1 className="text-balance text-3xl font-semibold tracking-tight text-white md:text-5xl">
-              Agentic Engineering Prompt Hub
-            </h1>
+            <motion.h1
+              initial={{ opacity: 0, y: 18 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, ease: "easeOut", delay: 0.1 }}
+              className="text-balance text-3xl font-semibold tracking-tight text-white md:text-5xl"
+            >
+              <motion.span
+                animate={{
+                  backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
+                }}
+                transition={{ duration: 9, repeat: Infinity, ease: "linear" }}
+                className="inline-block bg-[linear-gradient(110deg,#f8fafc_20%,#7dd3fc_45%,#f8fafc_70%)] bg-[length:220%_100%] bg-clip-text text-transparent"
+              >
+                Agentic Engineering Prompt Hub
+              </motion.span>
+            </motion.h1>
             <p className="mt-3 max-w-3xl text-pretty text-sm text-slate-300 md:mt-4 md:text-lg">
               Espacio unificado para enviar prompts de cada equipo en tiempo real, con trazabilidad y confirmacion de insercion desde el panel docente.
             </p>
-          </header>
+          </motion.header>
 
           <section className="grid min-h-0 grid-cols-2 gap-3 md:grid-cols-3 md:gap-5">
             {TEAMS.map((team, index) => (
-              <button
+              <motion.button
                 key={team}
                 type="button"
                 onClick={() => setSelectedTeam(team)}
-                className={`soft-panel animate-rise group h-auto rounded-2xl border p-4 text-left transition duration-300 hover:-translate-y-0.5 hover:border-sky-300/60 hover:shadow-[0_24px_50px_-28px_rgba(30,64,175,0.8)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 md:p-6 ${
+                className={`soft-panel animate-rise group relative flex min-h-[170px] flex-col justify-between overflow-hidden rounded-2xl border p-4 text-left transition duration-300 hover:-translate-y-0.5 hover:border-sky-300/60 hover:shadow-[0_24px_50px_-28px_rgba(30,64,175,0.8)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 md:min-h-[210px] md:p-6 ${
                   index === 2 ? "col-span-2 md:col-span-1" : ""
                 }`}
                 style={{ animationDelay: `${index * 60}ms` }}
+                initial={{ opacity: 0, y: 18 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.35, delay: 0.08 + index * 0.08, ease: "easeOut" }}
+                whileHover={{ y: -4, scale: 1.01 }}
+                whileTap={{ scale: 0.995 }}
               >
-                <div className="mb-3 flex items-center justify-end md:mb-6">
-                  <span className="rounded-full border border-slate-500/40 bg-slate-800/40 px-2.5 py-1 text-xs font-medium uppercase tracking-wide text-slate-300">
-                    Equipo
-                  </span>
+                <span className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-sky-300/60 to-transparent" />
+                <div className="mb-3 md:mb-5" />
+                <div>
+                  <h2 className="text-3xl font-semibold text-white md:text-4xl">{team}</h2>
+                  <p className="mt-2 max-w-[24ch] text-xs text-slate-300 md:text-sm">
+                    Envia prompts y observa el estado de procesamiento en directo.
+                  </p>
                 </div>
-                <h2 className="text-2xl font-semibold text-white md:text-3xl">{team}</h2>
-                <p className="mt-2 max-w-[24ch] text-xs text-slate-300 md:text-sm">
-                  Envia prompts y observa el estado de procesamiento en directo.
-                </p>
-              </button>
+                <div className="mt-4 inline-flex w-fit items-center rounded-md border border-sky-400/30 bg-sky-950/25 px-2.5 py-1 text-xs font-medium text-sky-200 transition group-hover:border-sky-300/70 group-hover:text-sky-100">
+                  Entrar al canal
+                </div>
+              </motion.button>
             ))}
           </section>
         </section>
-      </main>
+      </motion.main>
     );
   }
 
   return (
-    <main className="app-canvas flex h-dvh overflow-hidden flex-col px-4 pb-4 pt-4 text-slate-100 md:px-8 md:pb-6 md:pt-6">
-      <header className="soft-panel animate-rise mx-auto mb-4 flex w-full max-w-6xl flex-wrap items-center justify-between gap-3 rounded-2xl px-4 py-3 md:px-6">
+    <motion.main
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.35 }}
+      className="app-canvas flex h-dvh overflow-hidden flex-col px-4 pb-4 pt-4 text-slate-100 md:px-8 md:pb-6 md:pt-6"
+    >
+      <motion.header {...fadeInUp} className="soft-panel mx-auto mb-4 flex w-full max-w-6xl flex-wrap items-center justify-between gap-3 rounded-2xl px-4 py-3 md:px-6">
         <div className="flex items-center gap-4">
           <Button
             variant="ghost"
@@ -263,7 +300,7 @@ export default function Home() {
           </Button>
           <div>
             <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-400">Canal activo</p>
-            <h2 className="text-lg font-semibold text-white md:text-xl">Equipo {selectedTeam}</h2>
+            <h2 className="text-xl font-semibold text-white md:text-2xl">Equipo {selectedTeam}</h2>
           </div>
         </div>
         <div className="flex flex-wrap items-center justify-end gap-2">
@@ -288,7 +325,7 @@ export default function Home() {
             {insertedCount} insertados
           </div>
         </div>
-      </header>
+      </motion.header>
 
       <section className="mx-auto flex w-full max-w-6xl min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-300/15 bg-slate-950/35">
         <ScrollArea className="min-h-0 flex-1 px-4 py-4 md:px-7 md:py-6">
@@ -300,13 +337,16 @@ export default function Home() {
           ) : (
             <div className="space-y-4 pb-2">
               {prompts.map((prompt) => (
-                <article
+                <motion.article
                   key={prompt.id}
                   className={`animate-rise rounded-2xl border px-4 py-4 shadow-sm md:px-5 ${
                     prompt.marked
                       ? "border-emerald-400/45 bg-emerald-950/20"
                       : "border-slate-500/30 bg-slate-900/35"
                   }`}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.25, ease: "easeOut" }}
                 >
                   <p className="whitespace-pre-wrap break-words font-mono text-sm leading-relaxed text-slate-200 md:text-[0.92rem]">
                     {prompt.text}
@@ -345,7 +385,7 @@ export default function Home() {
                       {copiedId === prompt.id ? "Copiado" : "Copiar"}
                     </Button>
                   </footer>
-                </article>
+                </motion.article>
               ))}
               <div ref={endOfListRef} />
             </div>
@@ -392,6 +432,6 @@ export default function Home() {
           </div>
         </div>
       </section>
-    </main>
+    </motion.main>
   );
 }

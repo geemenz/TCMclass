@@ -16,6 +16,7 @@ import {
   ShieldCheck,
   Trash2,
 } from "lucide-react";
+import { motion } from "framer-motion";
 import { toast } from "sonner";
 
 const TEAMS = ["TOM", "ANA", "DIANA"];
@@ -242,8 +243,18 @@ export default function AdminDashboard() {
   const getTeamPrompts = (team: string) => prompts.filter((prompt) => prompt.team === team);
 
   return (
-    <main className="app-canvas flex min-h-screen flex-col px-4 pb-4 pt-5 text-slate-100 md:px-8 md:pb-6 md:pt-6">
-      <header className="soft-panel animate-rise mx-auto mb-4 flex w-full max-w-[1400px] flex-wrap items-center justify-between gap-4 rounded-2xl px-5 py-4 md:px-7">
+    <motion.main
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.35 }}
+      className="app-canvas flex min-h-screen flex-col px-4 pb-4 pt-5 text-slate-100 md:px-8 md:pb-6 md:pt-6"
+    >
+      <motion.header
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, ease: "easeOut" }}
+        className="soft-panel mx-auto mb-4 flex w-full max-w-[1400px] flex-wrap items-center justify-between gap-4 rounded-2xl px-5 py-4 md:px-7"
+      >
         <div>
           <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight text-white">
             <MessageSquare className="h-6 w-6 text-sky-300" />
@@ -257,17 +268,20 @@ export default function AdminDashboard() {
           <ShieldCheck className="h-4 w-4" />
           {totalInserted} insertados de {prompts.length}
         </div>
-      </header>
+      </motion.header>
 
       <section className="mx-auto flex w-full max-w-[1400px] flex-col gap-4 pb-2 md:h-[calc(100vh-170px)] md:flex-1 md:flex-row md:gap-5 md:overflow-x-auto md:pb-1">
         {TEAMS.map((team, index) => {
           const teamPrompts = getTeamPrompts(team);
 
           return (
-            <article
+            <motion.article
               key={team}
               className="soft-panel animate-rise flex w-full min-w-0 flex-col rounded-2xl md:min-h-0 md:w-[390px] md:min-w-[340px]"
               style={{ animationDelay: `${index * 70}ms` }}
+              initial={{ opacity: 0, y: 18 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.35, delay: 0.1 + index * 0.08, ease: "easeOut" }}
             >
               <header className="flex items-center justify-between border-b border-slate-400/15 px-4 py-3 md:px-5">
                 <div className="min-w-0 flex-1">
@@ -407,10 +421,10 @@ export default function AdminDashboard() {
                   </Button>
                 </div>
               </div>
-            </article>
+            </motion.article>
           );
         })}
       </section>
-    </main>
+    </motion.main>
   );
 }
