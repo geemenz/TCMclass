@@ -160,39 +160,41 @@ export default function Home() {
 
   if (!selectedTeam) {
     return (
-      <main className="app-canvas min-h-screen px-6 py-10 text-slate-100 md:px-10">
-        <section className="mx-auto flex w-full max-w-6xl flex-col gap-10">
-          <header className="soft-panel animate-rise rounded-3xl px-6 py-8 md:px-10 md:py-10">
-            <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-slate-400/20 bg-slate-900/30 px-3 py-1 text-sm font-medium text-slate-200">
+      <main className="app-canvas h-dvh overflow-hidden px-4 py-4 text-slate-100 md:px-10 md:py-8">
+        <section className="mx-auto flex h-full w-full max-w-6xl flex-col gap-4 md:gap-8">
+          <header className="soft-panel animate-rise rounded-3xl px-5 py-5 md:px-10 md:py-8">
+            <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-slate-400/20 bg-slate-900/30 px-3 py-1 text-xs font-medium text-slate-200 md:text-sm">
               <span
                 className={`h-2 w-2 rounded-full ${isConnected ? "bg-emerald-400" : "bg-amber-400 animate-pulse"}`}
               />
-              {isConnected ? "Conectado a Supabase" : "Verificando conexion"}
+              {isConnected ? "Conectado" : "Verificando conexion"}
             </div>
-            <h1 className="text-balance text-4xl font-semibold tracking-tight text-white md:text-5xl">
+            <h1 className="text-balance text-3xl font-semibold tracking-tight text-white md:text-5xl">
               Agentic Engineering Prompt Hub
             </h1>
-            <p className="mt-4 max-w-3xl text-pretty text-base text-slate-300 md:text-lg">
+            <p className="mt-3 max-w-3xl text-pretty text-sm text-slate-300 md:mt-4 md:text-lg">
               Espacio unificado para enviar prompts de cada equipo en tiempo real, con trazabilidad y confirmacion de insercion desde el panel docente.
             </p>
           </header>
 
-          <section className="grid gap-5 md:grid-cols-3">
+          <section className="grid min-h-0 grid-cols-2 gap-3 md:grid-cols-3 md:gap-5">
             {TEAMS.map((team, index) => (
               <button
                 key={team}
                 type="button"
                 onClick={() => setSelectedTeam(team)}
-                className="soft-panel animate-rise group rounded-2xl border p-6 text-left transition duration-300 hover:-translate-y-0.5 hover:border-sky-300/60 hover:shadow-[0_24px_50px_-28px_rgba(30,64,175,0.8)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+                className={`soft-panel animate-rise group h-auto rounded-2xl border p-4 text-left transition duration-300 hover:-translate-y-0.5 hover:border-sky-300/60 hover:shadow-[0_24px_50px_-28px_rgba(30,64,175,0.8)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 md:p-6 ${
+                  index === 2 ? "col-span-2 md:col-span-1" : ""
+                }`}
                 style={{ animationDelay: `${index * 60}ms` }}
               >
-                <div className="mb-6 flex items-center justify-end">
+                <div className="mb-3 flex items-center justify-end md:mb-6">
                   <span className="rounded-full border border-slate-500/40 bg-slate-800/40 px-2.5 py-1 text-xs font-medium uppercase tracking-wide text-slate-300">
                     Equipo
                   </span>
                 </div>
-                <h2 className="text-xl font-semibold text-white">{team}</h2>
-                <p className="mt-2 text-sm text-slate-300">
+                <h2 className="text-2xl font-semibold text-white md:text-3xl">{team}</h2>
+                <p className="mt-2 max-w-[24ch] text-xs text-slate-300 md:text-sm">
                   Envia prompts y observa el estado de procesamiento en directo.
                 </p>
               </button>
@@ -204,8 +206,8 @@ export default function Home() {
   }
 
   return (
-    <main className="app-canvas flex min-h-screen flex-col px-4 pb-4 pt-5 text-slate-100 md:px-8 md:pb-6 md:pt-6">
-      <header className="soft-panel animate-rise mx-auto mb-4 flex w-full max-w-6xl items-center justify-between rounded-2xl px-4 py-3 md:px-6">
+    <main className="app-canvas flex h-dvh overflow-hidden flex-col px-4 pb-4 pt-4 text-slate-100 md:px-8 md:pb-6 md:pt-6">
+      <header className="soft-panel animate-rise mx-auto mb-4 flex w-full max-w-6xl flex-wrap items-center justify-between gap-3 rounded-2xl px-4 py-3 md:px-6">
         <div className="flex items-center gap-4">
           <Button
             variant="ghost"
@@ -226,7 +228,7 @@ export default function Home() {
         </div>
       </header>
 
-      <section className="mx-auto flex w-full max-w-6xl flex-1 flex-col overflow-hidden rounded-2xl border border-slate-300/15 bg-slate-950/35">
+      <section className="mx-auto flex w-full max-w-6xl min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-300/15 bg-slate-950/35">
         <ScrollArea className="flex-1 px-4 py-4 md:px-7 md:py-6">
           {prompts.length === 0 ? (
             <div className="flex h-[52vh] flex-col items-center justify-center rounded-2xl border border-dashed border-slate-500/35 bg-slate-900/20 text-slate-400">

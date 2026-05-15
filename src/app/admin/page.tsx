@@ -160,24 +160,24 @@ export default function AdminDashboard() {
         </div>
       </header>
 
-      <section className="mx-auto flex w-full max-w-[1400px] flex-1 gap-4 overflow-x-auto pb-1 md:gap-5">
+      <section className="mx-auto flex w-full max-w-[1400px] flex-col gap-4 pb-2 md:h-[calc(100vh-170px)] md:flex-1 md:flex-row md:gap-5 md:overflow-x-auto md:pb-1">
         {TEAMS.map((team, index) => {
           const teamPrompts = getTeamPrompts(team);
 
           return (
             <article
               key={team}
-              className="soft-panel animate-rise flex min-h-[68vh] w-[390px] min-w-[340px] flex-col rounded-2xl"
+              className="soft-panel animate-rise flex w-full min-w-0 flex-col rounded-2xl md:min-h-0 md:w-[390px] md:min-w-[340px]"
               style={{ animationDelay: `${index * 70}ms` }}
             >
               <header className="flex items-center justify-between border-b border-slate-400/15 px-4 py-3 md:px-5">
-                <h2 className="text-base font-semibold text-white">Equipo {team}</h2>
+                <h2 className="text-xl font-semibold text-white">Equipo {team}</h2>
                 <span className="rounded-md border border-slate-400/25 bg-slate-800/45 px-2 py-1 text-xs font-medium text-slate-300">
                   {teamPrompts.length}
                 </span>
               </header>
 
-              <ScrollArea className="flex-1 px-4 py-4 md:px-5">
+              <ScrollArea className="h-[42vh] px-4 py-4 md:h-auto md:flex-1 md:px-5">
                 {teamPrompts.length === 0 ? (
                   <div className="flex h-44 flex-col items-center justify-center rounded-xl border border-dashed border-slate-500/35 bg-slate-900/20 text-slate-400">
                     <Inbox className="mb-2 h-8 w-8 opacity-45" />
