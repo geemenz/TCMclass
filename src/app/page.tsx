@@ -32,6 +32,7 @@ interface Prompt {
 interface TeamLink {
   team: string;
   url: string;
+  subtitle: string;
 }
 
 export default function Home() {
@@ -42,6 +43,7 @@ export default function Home() {
   const [isConnected, setIsConnected] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [teamLink, setTeamLink] = useState<string>("");
+  const [teamSubtitles, setTeamSubtitles] = useState<Record<string, string>>({});
   const endOfListRef = useRef<HTMLDivElement | null>(null);
 
   const fadeInUp = {
@@ -60,7 +62,20 @@ export default function Home() {
       }
     };
 
+    const fetchTeamMetadata = async () => {
+      const { data } = await supabase.from("team_links").select("team,url,subtitle");
+      if (!data) return;
+
+      const subtitleMap = (data as TeamLink[]).reduce<Record<string, string>>((acc, row) => {
+        acc[row.team] = row.subtitle ?? "";
+        return acc;
+      }, {});
+
+      setTeamSubtitles(subtitleMap);
+    };
+
     checkConnection();
+    fetchTeamMetadata();
   }, []);
 
   useEffect(() => {
@@ -69,12 +84,13 @@ export default function Home() {
     const fetchTeamLink = async () => {
       const { data } = await supabase
         .from("team_links")
-        .select("team,url")
+        .select("team,url,subtitle")
         .eq("team", selectedTeam)
         .maybeSingle();
 
       const linkData = data as TeamLink | null;
       setTeamLink(linkData?.url ?? "");
+      setTeamSubtitles((prev) => ({ ...prev, [selectedTeam]: linkData?.subtitle ?? "" }));
     };
 
     fetchTeamLink();
@@ -147,6 +163,34 @@ export default function Home() {
         },
         (payload) => {
           setTeamLink((payload.new as TeamLink).url ?? "");
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [selectedTeam]);
+
+  useEffect(() => {
+    const channel = supabase
+      .channel("public:team-links")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "team_links" },
+        (payload) => {
+          const next = payload.new as TeamLink;
+          setTeamSubtitles((prev) => ({ ...prev, [next.team]: next.subtitle ?? "" }));
+          if (selectedTeam === next.team) setTeamLink(next.url ?? "");
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "team_links" },
+        (payload) => {
+          const next = payload.new as TeamLink;
+          setTeamSubtitles((prev) => ({ ...prev, [next.team]: next.subtitle ?? "" }));
+          if (selectedTeam === next.team) setTeamLink(next.url ?? "");
         }
       )
       .subscribe();
@@ -267,7 +311,7 @@ export default function Home() {
                 <div>
                   <h2 className="text-3xl font-semibold text-white md:text-4xl">{team}</h2>
                   <p className="mt-2 max-w-[24ch] text-xs text-slate-300 md:text-sm">
-                    Send prompts and track processing status in real time.
+                    {teamSubtitles[team] || "Send prompts and track processing status in real time."}
                   </p>
                 </div>
                 <div className="mt-4 inline-flex w-fit items-center rounded-md border border-sky-400/30 bg-sky-950/25 px-2.5 py-1 text-xs font-medium text-sky-200 transition group-hover:border-sky-300/70 group-hover:text-sky-100">
@@ -301,6 +345,9 @@ export default function Home() {
           <div>
             <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-400">Active channel</p>
             <h2 className="text-xl font-semibold text-white md:text-2xl">Team {selectedTeam}</h2>
+            <p className="mt-0.5 max-w-[42ch] text-xs text-slate-400 md:text-sm">
+              {teamSubtitles[selectedTeam] || "Send prompts and track processing status in real time."}
+            </p>
           </div>
         </div>
         <div className="flex flex-wrap items-center justify-end gap-2">

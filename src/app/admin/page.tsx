@@ -33,6 +33,7 @@ interface Prompt {
 interface TeamLink {
   team: string;
   url: string;
+  subtitle: string;
 }
 
 export default function AdminDashboard() {
@@ -45,12 +46,13 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     const fetchTeamLinks = async () => {
-      const { data } = await supabase.from("team_links").select("team,url");
+      const { data } = await supabase.from("team_links").select("team,url,subtitle");
 
       if (!data) return;
 
       const linksMap = (data as TeamLink[]).reduce<Record<string, string>>((acc, row) => {
         acc[row.team] = row.url ?? "";
+        acc[`${row.team}:subtitle`] = row.subtitle ?? "";
         return acc;
       }, {});
 
@@ -126,6 +128,7 @@ export default function AdminDashboard() {
 
   const handleSaveTeamLink = async (team: string) => {
     const rawUrl = (teamLinks[team] ?? "").trim();
+    const subtitle = (teamLinks[`${team}:subtitle`] ?? "").trim();
     const normalizedUrl =
       rawUrl.length === 0
         ? ""
@@ -148,6 +151,7 @@ export default function AdminDashboard() {
       {
         team,
         url: normalizedUrl,
+        subtitle,
       },
       { onConflict: "team" }
     );
@@ -159,8 +163,12 @@ export default function AdminDashboard() {
       return;
     }
 
-    setTeamLinks((prev) => ({ ...prev, [team]: normalizedUrl }));
-    toast.success("Enlace guardado");
+    setTeamLinks((prev) => ({
+      ...prev,
+      [team]: normalizedUrl,
+      [`${team}:subtitle`]: subtitle,
+    }));
+    toast.success("Team details saved");
   };
 
   const handleAdminDraftChange = (team: string, value: string) => {
@@ -297,6 +305,13 @@ export default function AdminDashboard() {
                       value={teamLinks[team] ?? ""}
                       onChange={(event) => handleLinkInputChange(team, event.target.value)}
                       placeholder="https://team-link"
+                      className="h-8 w-full rounded-md border border-slate-400/25 bg-slate-900/70 px-2.5 text-xs text-slate-200 placeholder:text-slate-500 focus:border-sky-400 focus:outline-none"
+                    />
+                    <input
+                      type="text"
+                      value={teamLinks[`${team}:subtitle`] ?? ""}
+                      onChange={(event) => handleLinkInputChange(`${team}:subtitle`, event.target.value)}
+                      placeholder="Team subtitle"
                       className="h-8 w-full rounded-md border border-slate-400/25 bg-slate-900/70 px-2.5 text-xs text-slate-200 placeholder:text-slate-500 focus:border-sky-400 focus:outline-none"
                     />
                     <Button
